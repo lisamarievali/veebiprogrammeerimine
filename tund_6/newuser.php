@@ -21,6 +21,7 @@
   $genderError = null;
   $emailError = "";
   $passwordError = "";
+  $confirmpasswordError = "";
 
 
   
@@ -38,8 +39,8 @@
   }
 
   if (isset($_POST["lastName"]) and !empty($_POST["lastName"])){
-	  //$lastName = $_POST["lasttName"];
-	  $lasttName = test_input($_POST["lasttName"]);
+	  //$lastName = $_POST["lastName"];
+	  $lastName = test_input($_POST["lastName"]);
 	  } else {
 	  $lastNameError = "Palun sisesta oma perekonnanimi!";
   }
@@ -66,8 +67,8 @@
   }
 
   if (isset($_POST["lastName"]) and !empty($_POST["lastName"])){
-	  //$lastName = $_POST["lasttName"];
-	  $lasttName = test_input($_POST["lasttName"]);
+	  //$lastName = $_POST["lastName"];
+	  $lastName = test_input($_POST["lastName"]);
 	  } else {
 	  $lastNameError = "Palun sisesta oma perekonnanimi!";
   }
@@ -186,7 +187,13 @@
 	  
 	  <label>Salasõna (min 8 märki):</label>
 	  <input name="password" type="password" $password = trim($_POST['password']); ?><br>
-	  
+	
+	  <label> Korrake salasõna:</label>
+	  <input name="confirmpassword" type="password" $password = trim($_POST['password']); ?><br>{
+
+	}
+		 
+	     
 
 	   
 	  <label>E-postiaadress (kasutajatunnuseks):</label><br>
