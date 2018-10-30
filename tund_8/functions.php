@@ -10,7 +10,7 @@
   //function $mydescription(){
 	  
   //}
-  
+  //userprofile seadistamine
   function saveprofile($description, $bgcolor, $txtcolor){
     $notice= "";
     $mysqli= new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
@@ -23,7 +23,7 @@
     $stmt->execute();
   
   
-    //userprofile seadistamine
+
   if($stmt->fetch()){
   
     $stmt->close();

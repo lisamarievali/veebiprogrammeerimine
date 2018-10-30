@@ -16,25 +16,20 @@
   $txtcolor= "";
   $notice= "";
 
-  if(isset($_POST["submitProfile"])){
-    if(isset($_POST["description"])){
-      if(empty($_POST["description"])){
-        $description="Pole iseloomustust lisanud";
-    } else {
-      $description=test_input($_POST["description"]);
-    }  
-    }
-    if(isset($_POST["bgcolor"])){
-      $bgcolor = $_POST["bgcolor"];
-    }
-    if(isset($_POST["txtcolor"])){
-      $txtcolor= $_POST["txtcolor"];
-    }
-    if(empty($description)){
-      $notice = saveprofile($description, $bgcolor, $txtcolor);
-    }
-  }
-$data= userprofileload();
+	if(isset($_POST["submitProfile"])){
+		if(isset($_POST["description"]) and isset($_POST["bgcolor"]) and isset($_POST["txtcolor"])){
+			if(empty($_POST["description"])){
+			 	$description = "Pole iseloomustust lisanud.";
+			} else {
+				$description = test_input($_POST["description"]);
+			}
+			$bgcolor = $_POST["bgcolor"];
+			$txtcolor = $_POST["txtcolor"];
+			$notice = saveprofile($description, $bgcolor, $txtcolor);
+		}
+	}
+	
+	$data= userprofileload();
  
  
   
@@ -43,6 +38,7 @@ $data= userprofileload();
 <html>
 <head>
   <meta charset="utf-8">
+  
   <title>Kasutaja profiil</title>
   
   <?php
@@ -69,9 +65,7 @@ $data= userprofileload();
   <label>Minu valitud tekstivärv: </label><input name="txtcolor" type="color" value="<?php echo $data[2]; ?>"><br>
   <input name="submitUserData" type="submit" value="Salvesta profiil">
   </form>
-  <?php
-  
-  ?>
+<p><?php echo $notice; ?> </p>
   
 </body>
 

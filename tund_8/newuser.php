@@ -24,7 +24,7 @@
   $confirmpasswordError = "";
   
   //kui on uue kasutaja loomise nuppu vajutatud
-  iss{
+
   
   if (isset($_POST["firstName"]) and !empty($_POST["firstName"])){
 	$name = test_input($_POST["firstName"]);
