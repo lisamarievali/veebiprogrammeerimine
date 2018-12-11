@@ -40,59 +40,42 @@
   require("header.php");
   
   
-  //piltide laadimise osa
-	$target_dir = "../vp_pic_uploads/";
-	
-	$uploadOk = 1;
-	
-	// Kontrollime, kas tegemist on pildiga või mitte
-	if(isset($_POST["submitImage"])) {
-		if(!empty($_FILES["fileToUpload"]["name"])){
-			//var_dump($_FILES["fileToUpload"]["name"]);
-		    //echo $_FILES["fileToUpload"]["fileName"];
-			
-			$imageFileType = strtolower(pathinfo(basename($_FILES["fileToUpload"]["name"]),PATHINFO_EXTENSION));
-			
-			//$target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
-			//$imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+	//profiilipildi laadimine
+	if(!empty($_FILES["fileToUpload"]["name"])){
+			$imageFileType = strtolower(pathinfo($_FILES["fileToUpload"]["name"], PATHINFO_EXTENSION));
 			$timeStamp = microtime(1) * 10000;
-			
-			$target_file_name = "vp_" .$timeStamp ."." .$imageFileType;
-			$target_file = $target_dir .$target_file_name;
-			
+			$target_file_name = "vpuser_" .$timeStamp ."." .$imageFileType;
+			$target_file = $profilePicDirectory .$target_file_name;
+						
+			// kas on pilt, kontrollin pildi suuruse küsimise kaudu
 			$check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
 			if($check !== false) {
-				echo "Fail on " . $check["mime"] . " pilt.";
-				//$uploadOk = 1;
+				//echo "Fail on pilt - " . $check["mime"] . ".";
+				$uploadOk = 1;
 			} else {
-				echo "Fail pole pilt!";
+				echo "Fail ei ole pilt.";
 				$uploadOk = 0;
 			}
 			
-			// Kontrollime, kas fail juba eksisteerib
-			if (file_exists($target_file)) {
-				echo "Selle nimega fail on juba olemas!";
-				$uploadOk = 0;
-			}
-			// Kontrollime faili suurust
+			// faili suurus
 			if ($_FILES["fileToUpload"]["size"] > 2500000) {
-				echo "Pilt on liiga suur!";
+				echo "Kahjuks on fail liiga suur!";
 				$uploadOk = 0;
 			}
 			
-			// Ainult teatud vormid lubatud
+			// kindlad failitüübid
 			if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
 			&& $imageFileType != "gif" ) {
-				echo "Vabandage, ainult JPG, JPEG, PNG ja GIF failid on lubatud!";
+				echo "Kahjuks on lubatud vaid JPG, JPEG, PNG ja GIF failid!";
 				$uploadOk = 0;
 			}
 			
-			// Kui tuleb error
+			// kui on tekkinud viga
 			if ($uploadOk == 0) {
-				echo "Valitud faili ei saa üles laadida!";
-			// Kui kõik on korras
+				echo "Vabandame, faili ei laetud üles!";
+			// kui kõik korras, laeme üles
 			} else {
-				//sõltuvalt failitüübist loon sobiva pildiobjekti
+				//sõltuvalt failitüübist, loome pildiobjekti
 				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
 					$myTempImage = imagecreatefromjpeg($_FILES["fileToUpload"]["tmp_name"]);
 				}
@@ -103,90 +86,69 @@
 					$myTempImage = imagecreatefromgif($_FILES["fileToUpload"]["tmp_name"]);
 				}
 				
-				//pildi originaalsuurus
+				//vaatame pildi originaalsuuruse
 				$imageWidth = imagesx($myTempImage);
 				$imageHeight = imagesy($myTempImage);
-				//leian suuruse muutmise suhtarvu
-				/* if ($imageWidth < 600 and $imageHeight < 400){
-					$myImage = $image;
-				} else { */
-				
-				
+				//leian vajaliku suurendusfaktori, siin arvestan, et lõikan ruuduks!!!
 				if($imageWidth > $imageHeight){
-					$sizeRatio = $imageWidth / 600;
+					$sizeRatio = $imageHeight / 300;//ruuduks lõikamisel jagan vastupidi
 				} else {
-					$sizeRatio = $imageHeight / 400;
+					$sizeRatio = $imageWidth / 300;
 				}
 				
 				$newWidth = round($imageWidth / $sizeRatio);
-				$newHeight = round($imageHeight / $sizeRatio);
+				$newHeight = $newWidth;
+				$myImage = resizeImagetoSquare($myTempImage, $imageWidth, $imageHeight, $newWidth, $newHeight);
 				
-				$myImage = resizeImage($myTempImage, $imageWidth, $imageHeight, $newWidth, $newHeight);
-				
-				//vesimärk
+				//lisame vesimärgi
 				$waterMark = imagecreatefrompng("../vp_picfiles/vp_logo_w100_overlay.png");
 				$waterMarkWidth = imagesx($waterMark);
 				$waterMarkHeight = imagesy($waterMark);
 				$waterMarkPosX = $newWidth - $waterMarkWidth - 10;
 				$waterMarkPosY = $newHeight - $waterMarkHeight - 10;
+				//kopeerin vesimärgi pikslid pildile
 				imagecopy($myImage, $waterMark, $waterMarkPosX, $waterMarkPosY, 0, 0, $waterMarkWidth, $waterMarkHeight);
 				
-				//tekst vesimärgina
-				$textToImage = "Veebiprogrammeerimine";
-				//mis pilt, r, g, b, alpha 0...127
-				$textColor = imagecolorallocatealpha($myImage, 255, 255, 255, 70);
-				imagettftext($myImage, 20, 0, 10, 30, $textColor, "../vp_picfiles/ARIALBD.TTF", $textToImage);
-				
-				
-				
-				//faili salvestamine,jälle sõltuvalt failitüübist
+				//muudetud suurusega pilt kirjutatakse pildifailiks
 				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
-					if(imagejpeg($myImage, $target_file, 90)){
-						echo "Fail ". basename( $_FILES["fileToUpload"]["name"]). " laeti edukalt üles!";
-						addPhotoData($target_file_name, $_POST["altText"], $_POST["privacy"]);
-					} else {
-						echo "Vabandame, faili üleslaadimisel tekkis tehniline viga!";
-					}
-				}
-				
-				if($imageFileType == "png"){
-					if(imagepng($myImage, $target_file, 6)){
-						echo "Fail ". basename( $_FILES["fileToUpload"]["name"]). " laeti edukalt üles!";
-						addPhotoData($target_file_name, $_POST["altText"], $_POST["privacy"]);
-					} else {
-						echo "Vabandame, faili üleslaadimisel tekkis tehniline viga!";
-					}
-				}
-				
-				if($imageFileType == "gif"){
-					if(imagegif($myImage, $target_file)){
-						echo "Fail ". basename( $_FILES["fileToUpload"]["name"]). " laeti edukalt üles!";
-						addPhotoData($target_file_name, $_POST["altText"], $_POST["privacy"]);
-					} else {
-						echo "Vabandame, faili üleslaadimisel tekkis tehniline viga!";
-					}
+				  if(imagejpeg($myImage, $target_file, 90)){
+                    //echo "Korras!";
+					//ja kohe see uus profiilipilt
+		            $profilePic = $target_file;
+					//kui pilt salvestati, siis lisame andmebaasi
+					$addedPhotoId = addUserPhotoData($target_file_name);
+					//echo "Lisatud pildi ID: " .$addedPhotoId;
+				  } else {
+					//echo "Pahasti!";
+				  }
 				}
 				
 				imagedestroy($myTempImage);
 				imagedestroy($myImage);
 				imagedestroy($waterMark);
 				
-				/* if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-					echo "Fail ". basename( $_FILES["fileToUpload"]["name"]). " laeti edukalt üles!";
-				} else {
-					echo "Vabandame, faili üleslaadimisel tekkis tehniline viga!";
-				} */
-				//}
 			}
-		}//if !empty lõppeb
-	}//siin lõppeb nupuvajutuse kontroll
-	
-	function resizeImage($image, $ow, $oh, $w, $h){
-		$newImage = imagecreatetruecolor($w, $h);
-		imagecopyresampled($newImage, $image, 0, 0, 0, 0, $w, $h, $ow, $oh);
-		return $newImage;
-	}
+		}//pildi laadimine lõppes
+		//profiili salvestamine koos pildiga
+
   
+  function resizeImageToSquare($image, $ow, $oh, $w, $h){
+	$newImage = imagecreatetruecolor($w, $h);
+	if($ow > $oh){
+		$cropX = round(($ow - $oh) / 2);
+		$cropY = 0;
+		$cropSize = $oh;
+	} else {
+		$cropX = 0;
+		$cropY = round(($oh - $ow) / 2);
+		$cropSize = $ow;
+	}
+    //imagecopyresampled($newImage, $image, 0, 0 , 0, 0, $w, $h, $ow, $oh);
+	imagecopyresampled($newImage, $image, 0, 0, $cropX, $cropY, $w, $h, $cropSize, $cropSize); 
+	return $newImage;
+  }
+    
+
 ?>
 
 <!DOCTYPE html>
